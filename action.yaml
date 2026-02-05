@@ -1,0 +1,59 @@
+name: Sign and upload Config file
+description: "Signs, zips and uploads a config file to the configuration S3 bucket"
+inputs:
+  aws-role-arn:
+    description: AWS role ARN to assume to sign and push the config file to S3
+    required: true
+  aws-region:
+    description: AWS region to use
+    required: false
+    default: eu-west-2
+  config-file:
+    description: The name of the configuration file
+    required: true
+  artefact-signing-key-arn:
+    description: The ARN of the artefact signing key from the main stack
+    required: true
+  config-source-bucket-name:
+    description: The name of the S3 bucket from the Configuration stack
+    required: true
+  environment:
+    description: The target environment to upload the file to
+    required: true
+    default: dev
+
+runs:
+  using: composite
+  steps:
+    - name: Assume AWS Role
+      if: ${{ inputs.aws-role-arn != null }}
+      uses: aws-actions/configure-aws-credentials@v6.0.0
+      with:
+        role-to-assume: ${{ inputs.aws-role-arn }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Sign and Zip config file
+      shell: bash
+      env:
+        CONFIG_FILE: ${{ inputs.config-file }}
+        ARTEFACT_SIGNING_KEY_ARN: ${{ inputs.artefact-signing-key-arn }}
+      run: |
+        aws kms sign \
+          --key-id "${ARTEFACT_SIGNING_KEY_ARN}" \
+          --message "$(openssl dgst -sha256 -binary "config/${CONFIG_FILE}" | base64)" \
+          --message-type DIGEST \
+          --signing-algorithm ECDSA_SHA_256 \
+          --region eu-west-2 > "config/${CONFIG_FILE}.sig"
+        zip -j config/config.zip "config/${CONFIG_FILE}" "config/${CONFIG_FILE}.sig"
+
+    - name: Push config file to AWS S3 Bucket
+      shell: bash
+      env:
+        CONFIG_SOURCE_BUCKET_NAME: ${{ inputs.config-source-bucket-name }}
+        CONFIG_FILE: ${{ inputs.config-file }}
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        aws s3api put-object \
+        --bucket "${CONFIG_SOURCE_BUCKET_NAME}" \
+        --key "${ENVIRONMENT}/config.zip" \
+        --body config/config.zip
