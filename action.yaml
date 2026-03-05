@@ -12,9 +12,9 @@ inputs:
     description: The name of the configuration file
     required: true
   config-zip-name:
-    description: The name of the zipped configuration
+    description: The name of the zipped configuration pushed to s3
     required: false
-    default: config
+    default: config.zip
   artefact-signing-key-arn:
     description: The ARN of the artefact signing key from the main stack
     required: true
@@ -27,7 +27,8 @@ inputs:
     default: dev
   working-directory:
     description: Path to folder containing the config file
-    required: true
+    required: false
+    default: .
 
 runs:
   using: composite
@@ -54,7 +55,7 @@ runs:
           --message-type DIGEST \
           --signing-algorithm ECDSA_SHA_256 \
           --region "${AWS_REGION}" > "${CONFIG_FILE}.sig"
-        zip -j "${CONFIG_ZIP_NAME}.zip" "${CONFIG_FILE}" "${CONFIG_FILE}.sig"
+        zip -j "${CONFIG_ZIP_NAME}" "${CONFIG_FILE}" "${CONFIG_FILE}.sig"
 
     - name: Push config file to AWS S3 Bucket
       shell: bash
@@ -68,4 +69,4 @@ runs:
         aws s3api put-object \
         --bucket "${CONFIG_SOURCE_BUCKET_NAME}" \
         --key "${ENVIRONMENT}/${CONFIG_ZIP_NAME}.zip" \
-        --body "${CONFIG_ZIP_NAME}.zip"
+        --body "${CONFIG_ZIP_NAME}"
