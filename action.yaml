@@ -11,6 +11,10 @@ inputs:
   config-file:
     description: The name of the configuration file
     required: true
+  config-zip-name:
+    description: The name of the zipped configuration pushed to s3
+    required: false
+    default: config.zip
   artefact-signing-key-arn:
     description: The ARN of the artefact signing key from the main stack
     required: true
@@ -21,6 +25,10 @@ inputs:
     description: The target environment to upload the file to
     required: true
     default: dev
+  working-directory:
+    description: Path to folder containing the config file
+    required: false
+    default: .
 
 runs:
   using: composite
@@ -34,26 +42,31 @@ runs:
 
     - name: Sign and Zip config file
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         CONFIG_FILE: ${{ inputs.config-file }}
+        CONFIG_ZIP_NAME: ${{ inputs.config-zip-name }}
         ARTEFACT_SIGNING_KEY_ARN: ${{ inputs.artefact-signing-key-arn }}
+        AWS_REGION: ${{ inputs.aws-region }}
       run: |
         aws kms sign \
           --key-id "${ARTEFACT_SIGNING_KEY_ARN}" \
-          --message "$(openssl dgst -sha256 -binary "config/${CONFIG_FILE}" | base64)" \
+          --message "$(openssl dgst -sha256 -binary "${CONFIG_FILE}" | base64)" \
           --message-type DIGEST \
           --signing-algorithm ECDSA_SHA_256 \
-          --region eu-west-2 > "config/${CONFIG_FILE}.sig"
-        zip -j config/config.zip "config/${CONFIG_FILE}" "config/${CONFIG_FILE}.sig"
+          --region "${AWS_REGION}" > "${CONFIG_FILE}.sig"
+        zip -j "${CONFIG_ZIP_NAME}" "${CONFIG_FILE}" "${CONFIG_FILE}.sig"
 
     - name: Push config file to AWS S3 Bucket
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         CONFIG_SOURCE_BUCKET_NAME: ${{ inputs.config-source-bucket-name }}
         CONFIG_FILE: ${{ inputs.config-file }}
+        CONFIG_ZIP_NAME: ${{ inputs.config-zip-name }}
         ENVIRONMENT: ${{ inputs.environment }}
       run: |
         aws s3api put-object \
         --bucket "${CONFIG_SOURCE_BUCKET_NAME}" \
-        --key "${ENVIRONMENT}/config.zip" \
-        --body config/config.zip
+        --key "${ENVIRONMENT}/${CONFIG_ZIP_NAME}.zip" \
+        --body "${CONFIG_ZIP_NAME}"

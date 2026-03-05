@@ -41,3 +41,5 @@ jobs:
           artefact-signing-key-arn: ${{ secrets.CONFIG_SIGNING_KEY_ARN }}
           config-source-bucket-name: ${{ secrets.APP_CONFIG_SOURCE_BUCKET_NAME }}
           environment: dev
+          working-directory: config
+
