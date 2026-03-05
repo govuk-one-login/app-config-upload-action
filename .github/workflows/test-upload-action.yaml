@@ -34,10 +34,12 @@ jobs:
           path: upload-action
 
       - name: Upload action
-        uses: ./upload-action
+        uses: govuk-one-login/app-config-upload-action@PYIC-8668
         with:
           aws-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           config-file: test-config.yaml
+          config-zip-name: config.zip
           artefact-signing-key-arn: ${{ secrets.CONFIG_SIGNING_KEY_ARN }}
           config-source-bucket-name: ${{ secrets.APP_CONFIG_SOURCE_BUCKET_NAME }}
           environment: dev
+          working-directory: config
