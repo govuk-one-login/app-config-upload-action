@@ -8,15 +8,16 @@ This package signs, zips and pushes the config file (named `config.zip`) to the 
 
 ### Action inputs
 
-| Input                     | Required | Description                                                                      | Example                                                                |
-|---------------------------| --- |----------------------------------------------------------------------------------|------------------------------------------------------------------------|
-| aws-role-arn              | true | The AWS role the action will assume before uploading the file                    | arn:aws:iam::123456789000:role/role-name                               |
-| aws-region                | false | The name of the region to use when authenticating with AWS. Default is `eu-west-2` | eu-west-2                                                              |
-| config-file               | true | The name of the configuration file to upload                                     | config.zip                                                             |
-| artefact-signing-key      | true | The ARN of the signing key used to sign the configuration file                   | arn:aws:kms:eu-west-2:123456789000:key/12345678-a1b2-3bc5-12a3b45c67d6 |
-| config-source-bucket-name | true | The name of the S3 bucket where the configuration file will be stored            | config-pipelinebucket-abcdef1ghijk                                     |
-| environment               | true | The environment to upload the file to. Defaults to `dev`                          | dev                                                                    |
-| working-directory         | true | Path to folder containing the config file                          | config                                                                 |
+| Input                     | Required | Description                                                                        | Example                                                                |
+|---------------------------|----------|------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| aws-role-arn              | true     | The AWS role the action will assume before uploading the file                      | arn:aws:iam::123456789000:role/role-name                               |
+| aws-region                | false    | The name of the region to use when authenticating with AWS. Default is `eu-west-2` | eu-west-2                                                              |
+| config-file               | true     | The name of the configuration file to upload                                       | config.yaml                                                            |
+| config-zip-name           | false    | The name of the zipped configuration pushed to s3                                  | config.zip                                                             |
+| artefact-signing-key      | true     | The ARN of the signing key used to sign the configuration file                     | arn:aws:kms:eu-west-2:123456789000:key/12345678-a1b2-3bc5-12a3b45c67d6 |
+| config-source-bucket-name | true     | The name of the S3 bucket where the configuration file will be stored              | config-pipelinebucket-abcdef1ghijk                                     |
+| environment               | true     | The environment to upload the file to. Defaults to `dev`                           | dev                                                                    |
+| working-directory         | false    | Path to folder containing the config file                                          | .                                                                      |
 
 ### Usage Example
 
@@ -27,7 +28,8 @@ Pull the action into your workflow like in the example below, specify the versio
   uses: govuk-one-login/app-config-upload-action@<version_number>
   with:
     aws-role-arn: ${{ secrets.AWS_ROLE_ARN }}
-    config-file: config.zip
+    config-file: config.yaml
+    config-zip-name: config.zip
     artefact-signing-key: ${{ secrets.SIGNING_KEY_ARN }}
     config-source-bucket-name: ${{ secrets.CONFIG_SOURCE_BUCKET_NAME }}
     environment: dev
