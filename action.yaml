@@ -68,5 +68,5 @@ runs:
       run: |
         aws s3api put-object \
         --bucket "${CONFIG_SOURCE_BUCKET_NAME}" \
-        --key "${ENVIRONMENT}/${CONFIG_ZIP_NAME}.zip" \
+        --key "${ENVIRONMENT}/${CONFIG_ZIP_NAME}" \
         --body "${CONFIG_ZIP_NAME}"
