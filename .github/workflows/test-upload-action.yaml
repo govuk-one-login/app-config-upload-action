@@ -31,6 +31,12 @@ jobs:
           commit: "${{ github.sha }}"
           EOF
 
+      - name: Create commit message with invalid characters
+        run: |
+          git config --global user.email "test@example.com"
+          git config --global user.name "Test Name"
+          git commit --allow-empty -m ",.<>/?;:'\[]{}!@£$%^&*()_+-=ABC123"
+
       - name: Upload action
         uses: ./
         with:
