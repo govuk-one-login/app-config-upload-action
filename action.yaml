@@ -70,19 +70,17 @@ runs:
 
         HEAD_MESSAGE=$(git log -1 --format=%s)
 
-
-
         release_metadata=(
-        "commitsha=${GITHUB_SHA}"
-        "committag=$(git describe --tags --first-parent --always)"
-        "commitmessage=$(echo "$HEAD_MESSAGE" \
-          | head -n 1 \
-          | cut -c1-50 \
-          | iconv -f utf-8 -t ascii//TRANSLIT \
-          | tr -cd 'A-Za-z0-9-+=:.')"
-        "mergetime=$(TZ=UTC0 git log -1 --format=%cd --date=format-local:"%F %T")"
-        "commitauthor=${GITHUB_ACTOR}"
-        "repository=${GITHUB_REPOSITORY}"
+          "commitsha=${GITHUB_SHA}"
+          "committag=$(git describe --tags --first-parent --always)"
+          "commitmessage=$(echo "$HEAD_MESSAGE" \
+            | head -n 1 \
+            | tr -cd 'A-Za-z0-9 .:+=-' \
+            | tr -s '[:space:]' ' ' \
+            | cut -c1-50)"
+          "mergetime=$(TZ=UTC0 git log -1 --format=%cd --date=format-local:"%F %T")"
+          "commitauthor=${GITHUB_ACTOR}"
+          "repository=${GITHUB_REPOSITORY}"
         )
 
         metadata=$(IFS=,; echo "${release_metadata[*]}")
