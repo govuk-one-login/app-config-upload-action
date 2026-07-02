@@ -2,7 +2,9 @@
 
 This repository contains a specialised GitHub Action for uploading a configuration file to S3 for use in the configuration pipeline.
 
-This package signs, zips and pushes the config file (named `config.zip`) to the designated AWS account
+This package signs, zips and pushes the config file (named `config.zip`) to the designated AWS account.
+
+This action add metadata to the artefact uploaded to s3 bucket. This improves integration with Build Notification stack and accurate information in Slack channel.
 
 ## Usage Instructions
 

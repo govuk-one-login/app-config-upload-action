@@ -66,7 +66,31 @@ runs:
         CONFIG_ZIP_NAME: ${{ inputs.config-zip-name }}
         ENVIRONMENT: ${{ inputs.environment }}
       run: |
+        set -euo pipefail
+
+        HEAD_MESSAGE=$(git log -1 --format=%s)
+
+
+
+        release_metadata=(
+        "commitsha=${GITHUB_SHA}"
+        "committag=$(git describe --tags --first-parent --always)"
+        "commitmessage=$(echo "$HEAD_MESSAGE" \
+          | head -n 1 \
+          | cut -c1-50 \
+          | iconv -f utf-8 -t ascii//TRANSLIT \
+          | tr -cd 'A-Za-z0-9-+=:.')"
+        "mergetime=$(TZ=UTC0 git log -1 --format=%cd --date=format-local:"%F %T")"
+        "commitauthor=${GITHUB_ACTOR}"
+        "repository=${GITHUB_REPOSITORY}"
+        )
+
+        metadata=$(IFS=,; echo "${release_metadata[*]}")
+
+        column -ts= < <(tr "," "\n" <<< "$metadata")
+
         aws s3api put-object \
         --bucket "${CONFIG_SOURCE_BUCKET_NAME}" \
         --key "${ENVIRONMENT}/${CONFIG_ZIP_NAME}" \
-        --body "${CONFIG_ZIP_NAME}"
+        --body "${CONFIG_ZIP_NAME}" \
+        --metadata "${metadata}"

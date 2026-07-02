@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+
       - name: Create test config file
         shell: bash
         id: test-config
@@ -28,13 +31,14 @@ jobs:
           commit: "${{ github.sha }}"
           EOF
 
-      - name: Checkout branch
-        uses: actions/checkout@v6
-        with:
-          path: upload-action
+      - name: Create commit message with invalid characters
+        run: |
+          git config --global user.email "test@example.com"
+          git config --global user.name "Test Name"
+          git commit --allow-empty -m ",.<>/?;:'\[]{}!@£$%^&*()_+-=ABC123"
 
       - name: Upload action
-        uses: ./upload-action
+        uses: ./
         with:
           aws-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           config-file: test-config.yaml
